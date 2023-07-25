@@ -4,7 +4,7 @@
 
     Author: Guilherme Arruda
 
-    GitHub: https://github.com/ohananoshi/LCD_PIC_API
+    GitHub: https://github.com/ohananoshi/LCD_16x2_API
 
     Created in: 18 jul 2023
 
