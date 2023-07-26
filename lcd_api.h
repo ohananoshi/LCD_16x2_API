@@ -8,12 +8,10 @@
 
     Created in: 18 jul 2023
 
-    Last updated: 25 jul 2023
+    Last updated: 26 jul 2023
 */
 
 //===================================== HEADERS ========================================
-
-//#include <xc.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -21,94 +19,112 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-//==================================== MACROS ==========================================
+//============================== COMPATIBILITY ZONE ====================================
 
-//#define _XTAL_FREQ 4000000
+//PIC18F4550 WITH XC8 COMPILER EXAMPLE
 
-//VCC modes
+//----------------------------------- HEADERS ------------------------------------------
 
-#define VCC_5 0
-#define VCC_2_7 1
+//INCLUDE THE HEADERS ACCORDING TO THE MICROCONTROLLER AND COMPILER
+#include <xc.h>
 
-//Inteface modes
+//----------------------------- DELAY FUNCTIONS ----------------------------------------
 
-#define I4_BIT 0
-#define I8_BIT 1
-#define INTERFACE_MODE I4_BIT
+//DEFINE THE DELAY FUNCTION ACCORDING TO THE COMPILER 
 
-//Display lines
+//NECESSARY TO DELAY IN XC8 COMPILLER
+#define _XTAL_FREQ 4000000
 
-#define ONE_LINE 0
-#define TWO_LINES 1
+#define DELAY_US(x) __delay_us(x)
+#define DELAY_MS(x) __delay_ms(x)
 
-//Font modes
+//-------------------------------- PINOUT ----------------------------------------------
 
-#define FONT_5_8 0
-#define FONT_5_10 1
+//DEFINE THE PINOUT YOU WILL USE
 
-//Display settings
-
-#define DISPLAY_ON 1
-#define DISPLAY_OFF 0
-
-#define CURSOR_ON 1
-#define CURSOR_OFF 0
-
-#define CURSOR_BLINK_ON 1
-#define CURSOR_BLINK_OFF 0
-
-#define CURSOR_MOVE_RIGHT 1
-#define CURSOR_MOVE_LEFT 0
-
-#define CURSOR_FOLLOW 1
-#define CURSOR_NOT_FOLLOW 0
-
-//Define the pinout you will use
-
-#define LCD_RS PORTDbits.RD0                                                            // (0) para comandos (1) para dados
+#define LCD_RS PORTDbits.RD0
 #define LCD_EN PORTDbits.RD1
-#define LCD_RW 
-#define LCD_D0 
-#define LCD_D1 
-#define LCD_D2 
-#define LCD_D3 
 #define LCD_D4 PORTDbits.RD4
 #define LCD_D5 PORTDbits.RD5
 #define LCD_D6 PORTDbits.RD6
 #define LCD_D7 PORTDbits.RD7
 
-//===================================== MACRO FUNCTIONS ================================
+//============================= END OF COMPATIBILITY ZONE ==============================
 
+//==================================== MACROS ==========================================
 
-//===================================== DATATYPES =======================================
+//DISPLAY INSTRUCTIONS BIT MAP
+
+//DISPLAY COMMAND BITS
+
+#define COM_CLEAR_DISPLAY 0x01
+#define COM_RETURN_HOME 0x02
+#define COM_ENTRY_MODE_SET 0x04
+#define COM_DISPLAY_CONTROL 0x08
+#define COM_CURSOR_DISPLAY_SHIFT 0x10
+#define COM_FUNCTION_SET 0x20
+#define COM_SET_CGRAM_ADDRESS 0x40
+#define COM_SET_DDRAM_ADDRESS 0x80
+
+//ENTRY MODE BITS
+
+#define ENTRY_CURSOR_INCREMENT 0x00
+#define ENTRY_CURSOR_DECREMENT 0x02
+#define ENTRY_DISPLAY_SHIFT_ON 0x01
+#define ENTRY_DISPLAY_SHIFT_OFF 0x00
+
+//DISPLAY ON/OFF CONTROL BITS
+
+#define CTRL_DISPLAY_ON 0x04
+#define CTRL_DISPLAY_OFF 0x00
+#define CTRL_CURSOR_ON 0x02
+#define CTRL_CURSOR_OFF 0x00
+#define CTRL_BLINK_ON 0x01
+#define CTRL_BLINK_OFF 0x00
+
+//CURSOR OR DISPLAY SHIFT BITS
+
+#define SHIFT_DISPLAY_SHIFT 0x08
+#define SHIFT_CURSOR_MOVE 0x00
+#define SHIFT_MOVE_RIGHT 0x04
+#define SHIFT_MOVE_LEFT 0x00
+
+//FUNCTION SET BITS
+
+#define SET_8BIT_INTERFACE 0x10
+#define SET_4BIT_INTERFACE 0x00
+#define SET_2LINE_MODE 0x08
+#define SET_1LINE_MODE 0x00
+#define SET_CHAR_5x10 0x04
+#define SET_CHAR_5x8 0x00
+
+//DEFINE LCD INTERFACE MODE
+
+#define LCD_4BIT_INTERFACE
+//#define LCD_8BIT_INTERFACE
 
 //===================================== FUNCTIONS =======================================
 
-/*void busy_wait(){
-    LCD_RW = 1;
-    while(LCD_D7 != 0);
-    LCD_RW = 0;
-}*/
-
-void lcd_send_nibble(uint8_t data){
+void send_nibble(uint8_t data){
     LCD_EN = 0;
-    LCD_D7 = (data & 0x08);
-    LCD_D6 = (data & 0x04);
-    LCD_D5 = (data & 0x02);
+    LCD_D7 = ((data >> 3) & 0x01);
+    LCD_D6 = ((data >> 2) & 0x01);
+    LCD_D5 = ((data >> 1) & 0x01);
     LCD_D4 = (data & 0x01);
     LCD_EN = 1;
-    __delay_us(37);	//execution time to write data
+    DELAY_US(37);	//execution time to write data
     LCD_EN = 0;
 }
 
-void lcd_send_byte(uint8_t data, bool is_instruction){
-    LCD_RS = !is_instruction;
-    __delay_us(100);
+void send_byte(uint8_t data, bool instruction_mode){
+    LCD_RS = !instruction_mode;
+    DELAY_US(100);
     
-    #if INTERFACE_MODE == I4_BIT
-        lcd_send_nibble((data >> 4));
-        lcd_send_nibble((data & 0x0f));
-    #elif INTERFACE_MODE == I8_BIT
+    #ifdef LCD_4BIT_INTERFACE
+        send_nibble((data >> 4));
+        send_nibble((data & 0x0f));
+    #endif
+    #ifdef LCD_8BIT_INTERFACE
         LCD_EN = 0;
         LCD_D7 = (data & 0x80);
         LCD_D6 = (data & 0x40);
@@ -119,27 +135,26 @@ void lcd_send_byte(uint8_t data, bool is_instruction){
         LCD_D1 = (data & 0x02);
         LCD_D0 = (data & 0x01);
         LCD_EN = 1;
-        __delay_us(37); // execution time to write data
+        DELAY_US(37); // execution time to write data
         LCD_EN = 0;
-    #else
-        #error "INTERFACE MODE ERROR: MUST BE I4_BIT OR I8_BIT"
+    #endif
+    #ifndef LCD_4BIT_INTERFACE
+        #ifndef LCD_8BIT_INTERFACE
+            #error "LCD INTERFACE MODE NOT DEFINED"
+        #endif
     #endif
 }
 
 void lcd_clear(){
-    LCD_RS = 0;
-    //LCD_RW = 0;
-    lcd_send_byte(0x01, 1);
+    send_byte(COM_CLEAR_DISPLAY, 1);
 }
 
 void lcd_move_cursor(bool line, uint8_t column){
-    uint8_t data = 0x80;
-    data |= (line << 6) + column;
-    lcd_send_byte(data, 1);
+    send_byte(COM_SET_DDRAM_ADDRESS | (line << 6) | column, 1);
 }
 
 void lcd_print(const char* string, ...){
-    char* output_string;
+    char output_string[16];
     
     va_list args;
     va_start(args, string);
@@ -150,115 +165,47 @@ void lcd_print(const char* string, ...){
     uint8_t i = 0;
     char chr = output_string[i];
     while(chr != '\0'){
-        lcd_send_byte(chr, 0);
+        send_byte(chr, 0);
         i++;
         chr = output_string[i];
     }
 }
 
-void lcd_settings(bool display_on, bool cursor_on, bool cursor_blink, bool cursor_move_direction, bool cursor_follow_display_shift){
-    //DISPLAY ON/OFF CONTROL
-    uint8_t data = 0x08;
-    data |= (display_on << 6);
-    data |= (cursor_on << 5);
-    data |= (cursor_blink << 4);
-    lcd_send_byte(data, 1);
-    
-    __delay_ms(1);
-    //busy_wait();
-    
-    //ENTRY MODE SET
-    data = 0x04;
-    data |= (cursor_move_direction <<  1);
-    data |= (cursor_follow_display_shift);
-    lcd_send_byte(data, 1);
-}
-
-void lcd_init(bool data_interface_mode, bool display_lines, bool font_mode, bool voltage_mode, bool std_settings, ...){
+void lcd_init(uint8_t lines, uint8_t char_size){
     LCD_RS = 0;
-    //LCD_RW = 0;
     LCD_D7 = 0;
     LCD_D6 = 0;
     LCD_D5 = 0;
-    LCD_D5 = 0;
-    
-    if(voltage_mode == VCC_2_7) __delay_ms(50);
-    else __delay_ms(20);
-    
-    if(data_interface_mode == I4_BIT){
-	uint8_t data = 0;
+    LCD_D4 = 0;
 
-        lcd_send_nibble(0x03);
-        __delay_ms(5);
-        lcd_send_nibble(0x03);
-        __delay_us(150);
-        lcd_send_nibble(0x03);
-        __delay_us(10);
-	
-	//busy_wait();
-	
-        lcd_send_nibble(0x02);
-        __delay_us(40);
-	
-	data = 0x20;
-	data |= ((data_interface_mode << 4) + (display_lines << 3) + (font_mode << 2));
-	
-	lcd_send_byte(data, 1);
-	
-	if(std_settings){
-	    lcd_settings(DISPLAY_OFF, CURSOR_OFF, CURSOR_BLINK_OFF, CURSOR_MOVE_RIGHT, CURSOR_FOLLOW);
-	    lcd_clear();
-	}else{
-	    va_list settings;
-	    va_start(settings, std_settings);
-	    
-	    bool display_status = va_arg(settings, bool);
-	    bool cursor_status = va_arg(settings, bool);
-	    bool cursor_blink = va_arg(settings, bool);
-	    bool cursor_direction = va_arg(settings, bool);
-	    bool cursor_follow = va_arg(settings, bool);
-	    
-	    va_end(settings);
-	    
-	    lcd_settings(display_status, cursor_status, cursor_blink, cursor_direction, cursor_follow);
-	    lcd_clear();
-	}
-    }else{
-        uint8_t data = 0;
+    DELAY_MS(50);
 
-        lcd_send_byte(0x30, 1);
-        __delay_ms(5);
-        lcd_send_byte(0x30, 1);
-        __delay_us(150);
-        lcd_send_byte(0x30, 1);
-        __delay_us(10);
-	
-	//busy_wait();
-    __delay_ms(1);
-	
-	data = 0x30;
-	data |= ((display_lines << 3) + (font_mode << 2));
-	
-	lcd_send_byte(data, 1);
-	
-	if(std_settings){
-	    lcd_settings(DISPLAY_OFF, CURSOR_OFF, CURSOR_BLINK_OFF, CURSOR_MOVE_RIGHT, CURSOR_FOLLOW);
-	    lcd_clear();
-	}else{
-	    va_list settings;
-	    va_start(settings, std_settings);
-	    
-	    bool display_status = va_arg(settings, bool);
-	    bool cursor_status = va_arg(settings, bool);
-	    bool cursor_blink = va_arg(settings, bool);
-	    bool cursor_direction = va_arg(settings, bool);
-	    bool cursor_follow = va_arg(settings, bool);
-	    
-	    va_end(settings);
-	    
-	    lcd_settings(display_status, cursor_status, cursor_blink, cursor_direction, cursor_follow);
-	    lcd_clear();
-        }
-    }//end initialization
+    #ifdef LCD_4BIT_INTERFACE
+        send_nibble((COM_FUNCTION_SET >> 4) | (SET_8BIT_INTERFACE >> 4));
+        DELAY_US(4500);
+        send_nibble((COM_FUNCTION_SET >> 4) | (SET_8BIT_INTERFACE >> 4));
+        DELAY_US(4500);
+        send_nibble((COM_FUNCTION_SET >> 4) | (SET_8BIT_INTERFACE >> 4));
+        DELAY_US(4500);
+        send_nibble((COM_FUNCTION_SET >> 4) | (SET_4BIT_INTERFACE >> 4));
+	#endif
+    #ifdef LCD_8BIT_INTERFACE
+        send_byte(COM_FUNCTION_SET | SET_8BIT_INTERFACE);
+        _DELAY_US(4500);
+        send_byte(COM_FUNCTION_SET | SET_8BIT_INTERFACE);
+        DELAY_US(150);
+        send_byte(COM_FUNCTION_SET | SET_8BIT_INTERFACE);
+    #endif
+    #ifndef LCD_4BIT_INTERFACE
+        #ifndef LCD_8BIT_INTERFACE
+            #error "LCD INTERFACE MODE NOT DEFINED"
+        #endif
+    #endif
+
+    send_byte(COM_FUNCTION_SET | lines | char_size, 1);
+    send_byte(COM_DISPLAY_CONTROL | CTRL_DISPLAY_ON | CTRL_CURSOR_OFF | CTRL_BLINK_OFF, 1);
+    lcd_clear();
+    send_byte(COM_ENTRY_MODE_SET | ENTRY_CURSOR_DECREMENT | ENTRY_DISPLAY_SHIFT_OFF, 1);
+
+    //END INITIALIZATION
 }
-
