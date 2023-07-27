@@ -98,7 +98,7 @@
 #define SET_CHAR_5x10 0x04
 #define SET_CHAR_5x8 0x00
 
-//DEFINE LCD INTERFACE MODE
+//DEFINE LCD INTERFACE MODE -------------------------------------------------------------
 
 #define LCD_4BIT_INTERFACE
 //#define LCD_8BIT_INTERFACE
@@ -112,7 +112,7 @@ void send_nibble(uint8_t data){
     LCD_D5 = ((data >> 1) & 0x01);
     LCD_D4 = (data & 0x01);
     LCD_EN = 1;
-    DELAY_US(37);	//execution time to write data
+    DELAY_US(40);	//execution time to write data
     LCD_EN = 0;
 }
 
@@ -135,7 +135,7 @@ void send_byte(uint8_t data, bool instruction_mode){
         LCD_D1 = (data & 0x02);
         LCD_D0 = (data & 0x01);
         LCD_EN = 1;
-        DELAY_US(37); // execution time to write data
+        DELAY_US(40); // execution time to write data
         LCD_EN = 0;
     #endif
     #ifndef LCD_4BIT_INTERFACE
@@ -168,6 +168,27 @@ void lcd_print(const char* string, ...){
         send_byte(chr, 0);
         i++;
         chr = output_string[i];
+    }
+}
+
+bool lcd_create_char(char* character_pattern, uint8_t memory_position uint8_t dot_pattern){
+
+    if(dot_pattern == SET_CHAR_5x8){
+        if(memory_position < 8){
+            send_byte(COM_SET_CGRAM_ADDRESS | (memory_position << 3), 1);
+
+            for(uint8_t i = 0; i < 8; i++){
+                send_byte(character_pattern[i], 0);
+            }
+        }
+    }
+    if(dot_pattern == SET_CHAR_5x10){
+        if(memory_position < 4){
+            send_byte(COM_SET_CGRAM_ADDRESS | (memory_position << 4), 1);
+            for(uint8_t i = 0; i < 10; i++){
+                send_byte(character_pattern[i], 0);
+            }
+        }
     }
 }
 

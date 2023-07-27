@@ -44,6 +44,17 @@
     void lcd_print(const char* string, ...)
     ```
     ##### Print formated string like _printf_ does.
+- lcd_create_char
+
+    ```C
+    bool lcd_create_char(char* character_pattern, uint8_t memory_position uint8_t dot_pattern)
+    ```
+    ##### Sends personalized character to CGRAM
+    ```
+    character_patter: 8 or 10 elements array
+    memory_postition: 0 to 7 memory position 
+    dot_patter:       Use SET_CHAR_5x10 or SET_CHAR_5x8
+    ```
 - lcd_init
 
     ```C
@@ -51,8 +62,6 @@
     ```
     ##### Initialize display by function.
     ```C
-    lines: 
-        Use SET_1LINE_MODE or SET_2LINE_MODE
-    char_size:
-        Use SET_CHAR_5x10 or SET_CHAR_5x8
+    lines:     Use SET_1LINE_MODE or SET_2LINE_MODE
+    char_size: Use SET_CHAR_5x10 or SET_CHAR_5x8
     ```
