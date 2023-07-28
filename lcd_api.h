@@ -49,7 +49,17 @@
 #define LCD_D6 PORTDbits.RD6
 #define LCD_D7 PORTDbits.RD7
 
-//============================= END OF COMPATIBILITY ZONE ==============================
+//============================== CONFIGURATION ZONE =====================================
+
+//DEFINE LCD INTERFACE MODE -------------------------------------------------------------
+
+#define LCD_4BIT_INTERFACE
+//#define LCD_8BIT_INTERFACE
+
+//DEFINE DOT PATTER MODE
+
+#define CHAR_5x8
+//#define CHAR_5x10
 
 //==================================== MACROS ==========================================
 
@@ -98,12 +108,9 @@
 #define SET_CHAR_5x10 0x04
 #define SET_CHAR_5x8 0x00
 
-//DEFINE LCD INTERFACE MODE -------------------------------------------------------------
-
-#define LCD_4BIT_INTERFACE
-//#define LCD_8BIT_INTERFACE
-
 //===================================== FUNCTIONS =======================================
+
+//-------------------------------- LOW LEVEL FUNCTIONS ----------------------------------
 
 void send_nibble(uint8_t data){
     LCD_EN = 0;
@@ -145,12 +152,41 @@ void send_byte(uint8_t data, bool instruction_mode){
     #endif
 }
 
+//------------------------------ COMMOM USER FUNCTIONS ----------------------------------
+
 void lcd_clear(){
     send_byte(COM_CLEAR_DISPLAY, 1);
 }
 
-void lcd_move_cursor(bool line, uint8_t column){
+void lcd_home(){
+    send_byte(COM_RETURN_HOME, 1);
+}
+
+void lcd_shift_setting(uint8_t shift_option, uint8_t direction){
+    send_byte(COM_CURSOR_DISPLAY_SHIFT | shift_option | direction, 1);
+}
+
+void lcd_entry_setting(uint8_t text_write_direction, uint8_t shift){
+    send_byte(COM_ENTRY_MODE_SET | text_write_direction | shift, 1);
+}
+
+void lcd_cursor_move(bool line, uint8_t column){
     send_byte(COM_SET_DDRAM_ADDRESS | (line << 6) | column, 1);
+}
+
+void lcd_cursor_state(bool on_off){
+    if(on_off) send_byte(COM_DISPLAY_CONTROL | CTRL_CURSOR_ON, 1);
+    else send_byte(COM_DISPLAY_CONTROL | CTRL_CURSOR_OFF, 1);
+}
+
+void lcd_state(bool on_off){
+    if(on_off) send_byte(COM_DISPLAY_CONTROL | CTRL_DISPLAY_ON, 1);
+    else send_byte(COM_DISPLAY_CONTROL | CTRL_DISPLAY_OFF, 1);
+}
+
+void lcd_blink_state(bool on_off){
+    if(on_off) send_byte(COM_DISPLAY_CONTROL | CTRL_BLINK_ON, 1);
+    else send_byte(COM_DISPLAY_CONTROL | CTRL_BLINK_OFF, 1);
 }
 
 void lcd_print(const char* string, ...){
@@ -171,9 +207,16 @@ void lcd_print(const char* string, ...){
     }
 }
 
-bool lcd_create_char(char* character_pattern, uint8_t memory_position uint8_t dot_pattern){
+void lcd_print_cg(uint8_t memory_position){
+    if(memory_position > 7){
+        #warning "MEMORY POSITION VALUE EXCEEDS CGRAM CAPACITY"
+    }
+    send_byte(memory_position, 0);
+}
 
-    if(dot_pattern == SET_CHAR_5x8){
+bool lcd_create_char(char* character_pattern, uint8_t memory_position){
+
+    #ifdef CHAR_5x8
         if(memory_position < 8){
             send_byte(COM_SET_CGRAM_ADDRESS | (memory_position << 3), 1);
 
@@ -181,18 +224,23 @@ bool lcd_create_char(char* character_pattern, uint8_t memory_position uint8_t do
                 send_byte(character_pattern[i], 0);
             }
         }
-    }
-    if(dot_pattern == SET_CHAR_5x10){
+    #endif
+    #ifdef CHAR_5x10
         if(memory_position < 4){
             send_byte(COM_SET_CGRAM_ADDRESS | (memory_position << 4), 1);
             for(uint8_t i = 0; i < 10; i++){
                 send_byte(character_pattern[i], 0);
             }
         }
-    }
+    #endif
+    #ifndef CHAR_5x8
+        #ifndef CHAR_5x10
+            #error "A DOT PATTERN MUST BE DEFINED"
+        #endif
+    #endif
 }
 
-void lcd_init(uint8_t lines, uint8_t char_size){
+void lcd_init(uint8_t lines){
     LCD_RS = 0;
     LCD_D7 = 0;
     LCD_D6 = 0;
@@ -223,7 +271,15 @@ void lcd_init(uint8_t lines, uint8_t char_size){
         #endif
     #endif
 
-    send_byte(COM_FUNCTION_SET | lines | char_size, 1);
+    #ifndef CHAR_5x10
+        #ifdef CHAR_5x8
+            send_byte(COM_FUNCTION_SET | lines | SET_CHAR_5x8, 1);
+        #else
+            #error "A DOT PATTERN MUST BE DEFINED"
+        #endif
+    #else
+        send_byte(COM_FUNCTION_SET | lines | SET_CHAR_5x10, 1);
+    #endif
     send_byte(COM_DISPLAY_CONTROL | CTRL_DISPLAY_ON | CTRL_CURSOR_OFF | CTRL_BLINK_OFF, 1);
     lcd_clear();
     send_byte(COM_ENTRY_MODE_SET | ENTRY_CURSOR_DECREMENT | ENTRY_DISPLAY_SHIFT_OFF, 1);
