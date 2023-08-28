@@ -1,8 +1,11 @@
 ### LCD API
 
 #### C interface to connect PIC in 16x2 LCD displays, based on HD44780.
+<<<<<<< HEAD
 
 ![](IMAGE/LCD_API_WELCOME.png "LCD API WORKING IN PROTEUS SIMULATION.")
+=======
+>>>>>>> 00044bb1b18b7e7b74f36ea961192dfe28e5f27d
 
 ### Headers
 - stdint.h
