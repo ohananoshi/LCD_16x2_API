@@ -214,7 +214,7 @@ void lcd_print_cg(uint8_t memory_position){
     send_byte(memory_position, 0);
 }
 
-bool lcd_create_char(char* character_pattern, uint8_t memory_position){
+void lcd_create_char(char* character_pattern, uint8_t memory_position){
 
     #ifdef CHAR_5x8
         if(memory_position < 8){

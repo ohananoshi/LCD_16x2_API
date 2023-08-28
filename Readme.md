@@ -1,6 +1,8 @@
 ### LCD API
 
-#### C interface to connect in 16x2 LCD displays, based on HD44780. This API aims to work on any microcontroller and with any compiler as long as compatibility adjustments are made. 
+#### C interface to connect PIC in 16x2 LCD displays, based on HD44780.
+
+![](IMAGE/LCD_API_WELCOME.png "LCD API WORKING IN PROTEUS SIMULATION.")
 
 ### Headers
 - stdint.h
@@ -53,7 +55,7 @@
     ```
     character_patter: 8 or 10 elements array
     memory_postition: 0 to 7 memory position 
-    dot_patter:       Use SET_CHAR_5x10 or SET_CHAR_5x8
+    dot_pattern:       Use SET_CHAR_5x10 or SET_CHAR_5x8
     ```
 - lcd_init
 
