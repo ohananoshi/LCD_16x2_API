@@ -1,6 +1,6 @@
 ### LCD API
 
-#### C interface to connect in 16x2 LCD displays, based on HD44780. This API aims to work on any microcontroller and with any compiler as long as compatibility adjustments are made. 
+#### C interface to connect PIC in 16x2 LCD displays, based on HD44780.
 
 ### Headers
 - stdint.h
