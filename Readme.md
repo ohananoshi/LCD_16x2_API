@@ -2,7 +2,7 @@
 
 #### C interface to connect PIC in 16x2 LCD displays, based on HD44780.
 
-![https://github.com/ohananoshi/LCD_16x2_API/Image/lcd_api_welcome.png](Image/lcd_api_welcome.png "LCD API WORKING IN PROTEUS SIMULATION.")
+![lcd_api_welcome](Image/lcd_api_welcome.png "LCD API WORKING IN PROTEUS SIMULATION.")
 
 ### Headers
 - stdint.h
@@ -26,7 +26,7 @@
   - Character size
     - SET_CHAR_5x10
     - SET_CHAR_5x8
-![https://github.com/ohananoshi/LCD_16x2_API/Image/char_size.png](Image/char_size.png "LCD API WORKING IN PROTEUS SIMULATION.")
+![char_size](Image/char_size.png "LCD API WORKING IN PROTEUS SIMULATION.")
 
 ### Functions
 - send_nibble
