@@ -8,58 +8,125 @@
 
     Created in: 18 jul 2023
 
-    Last updated: 26 jul 2023
+    Last updated: 29 oct 2023
 */
 
 //===================================== HEADERS ========================================
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
+#ifndef _LCD_API_H
+    #define _LCD_API_H
+#endif
+
+#ifndef _STDINT_H
+    #include <stdint.h>
+#endif
+
+#ifndef _STDBOOL_H
+    #include <stdbool.h>
+#endif
+
+#ifndef _INC_STDIO
+    #include <stdio.h>
+#endif
+
+#ifndef _STDARG_H
+    #ifndef _ANSI_STDARG_H_
+        #include <stdarg.h>
+    #endif
+#endif
 
 //============================== COMPATIBILITY ZONE ====================================
 
-//PIC18F4550 WITH XC8 COMPILER EXAMPLE
-
 //----------------------------------- HEADERS ------------------------------------------
 
-//INCLUDE THE HEADERS ACCORDING TO THE MICROCONTROLLER AND COMPILER
-#include <xc.h>
+//INCLUDE THE HEADERS ACCORDING TO THE COMPILER
 
-//----------------------------- DELAY FUNCTIONS ----------------------------------------
-
-//DEFINE THE DELAY FUNCTION ACCORDING TO THE COMPILER 
-
-//NECESSARY TO DELAY IN XC8 COMPILLER
-#define _XTAL_FREQ 4000000
-
-#define DELAY_US(x) __delay_us(x)
-#define DELAY_MS(x) __delay_ms(x)
-
-//-------------------------------- PINOUT ----------------------------------------------
-
-//DEFINE THE PINOUT YOU WILL USE
-
-#define LCD_RS PORTDbits.RD0
-#define LCD_EN PORTDbits.RD1
-#define LCD_D4 PORTDbits.RD4
-#define LCD_D5 PORTDbits.RD5
-#define LCD_D6 PORTDbits.RD6
-#define LCD_D7 PORTDbits.RD7
+#ifndef _XC_H_
+        #ifdef COMPILER_PATH
+            #include COMPILER_PATH
+        #else
+            #include "xc.h"
+        #endif
+    #define _XTAL_FREQ 4000000
+    #define DELAY_US(x) __delay_us(x)
+    #define DELAY_MS(x) __delay_ms(x)
+#endif
 
 //============================== CONFIGURATION ZONE =====================================
 
 //DEFINE LCD INTERFACE MODE -------------------------------------------------------------
 
-#define LCD_4BIT_INTERFACE
-//#define LCD_8BIT_INTERFACE
+#ifndef LCD_4BIT_INTERFACE
+    #ifndef LCD_8BIT_INTERFACE
+        #define LCD_4BIT_INTERFACE //STD INTERFACE CONNECTION
+    #endif 
+#endif
+
+//PINOUT --------------------------------------------------------------------------------
+
+//DEFINE THE PINOUT WILL BE USED
+
+#ifdef LCD_4BIT_INTERFACE
+    #ifndef LCD_RS
+        #error "RS PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_EN
+        #error "EN PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_D4
+        #error "D4 PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_D5
+        #error "D5 PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_D6
+        #error "D6 PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_D7
+        #error "D7 PIN WAS NOT DEFINED"
+    #endif
+#endif
+
+#ifdef LCD_8BIT_INTERFACE
+    #ifndef LCD_RS
+        #error "RS PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_EN
+        #error "EN PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_D0
+        #error "D0 PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_D1
+        #error "D1 PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_D2
+        #error "D2 PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_D3
+        #error "D3 PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_D4
+        #error "D4 PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_D5
+        #error "D5 PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_D6
+        #error "D6 PIN WAS NOT DEFINED"
+    #endif
+    #ifndef LCD_D7
+        #error "D7 PIN WAS NOT DEFINED"
+    #endif
+#endif
 
 //DEFINE DOT PATTERN MODE
 
-#define CHAR_5x8
-//#define CHAR_5x10
+#ifndef CHAR_5x8
+    #ifndef CHAR_5x10
+        #define CHAR_5x8 //STD DOT PATTERN
+    #endif
+#endif
 
 //==================================== MACROS ==========================================
 
@@ -145,11 +212,6 @@ void send_byte(uint8_t data, bool instruction_mode){
         DELAY_US(40); // execution time to write data
         LCD_EN = 0;
     #endif
-    #ifndef LCD_4BIT_INTERFACE
-        #ifndef LCD_8BIT_INTERFACE
-            #error "LCD INTERFACE MODE NOT DEFINED"
-        #endif
-    #endif
 }
 
 //------------------------------ COMMOM USER FUNCTIONS ----------------------------------
@@ -233,19 +295,22 @@ void lcd_create_char(char* character_pattern, uint8_t memory_position){
             }
         }
     #endif
-    #ifndef CHAR_5x8
-        #ifndef CHAR_5x10
-            #error "A DOT PATTERN MUST BE DEFINED"
-        #endif
-    #endif
 }
 
+//STD INITIALIZATION
 void lcd_init(uint8_t lines){
     LCD_RS = 0;
     LCD_D7 = 0;
     LCD_D6 = 0;
     LCD_D5 = 0;
     LCD_D4 = 0;
+
+    #ifdef LCD_8BIT_INTERFACE
+        LCD_D3 = 0;
+        LCD_D2 = 0;
+        LCD_D1 = 0;
+        LCD_D0 = 0;
+    #endif
 
     DELAY_MS(50);
 
@@ -258,6 +323,7 @@ void lcd_init(uint8_t lines){
         DELAY_US(4500);
         send_nibble((COM_FUNCTION_SET >> 4) | (SET_4BIT_INTERFACE >> 4));
 	#endif
+
     #ifdef LCD_8BIT_INTERFACE
         send_byte(COM_FUNCTION_SET | SET_8BIT_INTERFACE);
         _DELAY_US(4500);
@@ -265,21 +331,15 @@ void lcd_init(uint8_t lines){
         DELAY_US(150);
         send_byte(COM_FUNCTION_SET | SET_8BIT_INTERFACE);
     #endif
-    #ifndef LCD_4BIT_INTERFACE
-        #ifndef LCD_8BIT_INTERFACE
-            #error "LCD INTERFACE MODE NOT DEFINED"
-        #endif
+
+    #ifdef CHAR_5x8
+        send_byte(COM_FUNCTION_SET | lines | SET_CHAR_5x8, 1);
     #endif
 
-    #ifndef CHAR_5x10
-        #ifdef CHAR_5x8
-            send_byte(COM_FUNCTION_SET | lines | SET_CHAR_5x8, 1);
-        #else
-            #error "A DOT PATTERN MUST BE DEFINED"
-        #endif
-    #else
+    #ifdef CHAR_5x10
         send_byte(COM_FUNCTION_SET | lines | SET_CHAR_5x10, 1);
     #endif
+
     send_byte(COM_DISPLAY_CONTROL | CTRL_DISPLAY_ON | CTRL_CURSOR_OFF | CTRL_BLINK_OFF, 1);
     lcd_clear();
     send_byte(COM_ENTRY_MODE_SET | ENTRY_CURSOR_DECREMENT | ENTRY_DISPLAY_SHIFT_OFF, 1);

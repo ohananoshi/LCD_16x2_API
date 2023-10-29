@@ -2,14 +2,31 @@
 
 #### C interface to connect PIC in 16x2 LCD displays, based on HD44780.
 
-![https://github.com/ohananoshi/LCD_16x2_API/blob/main/Image/lcd_api_welcome.png](Image/lcd_api_welcome.png "LCD API WORKING IN PROTEUS SIMULATION.")
+![https://github.com/ohananoshi/LCD_16x2_API/Image/lcd_api_welcome.png](Image/lcd_api_welcome.png "LCD API WORKING IN PROTEUS SIMULATION.")
 
 ### Headers
 - stdint.h
 - stdbool.h
 - stdlib.h
-- stdio.h
 - stdarg.h
+
+### Configuration constants
+  - Interface comunication mode 
+    - SET_8BIT_INTERFACE
+    ```
+    Use D0 to D7 pins to data transfer.
+    ```
+    - SET_4BIT_INTERFACE
+    ```
+    Use D4 to D7 pins to data transfer.
+    ``` 
+  - Display lines
+    - SET_2LINE_MODE
+    - SET_1LINE_MODE
+  - Character size
+    - SET_CHAR_5x10
+    - SET_CHAR_5x8
+![https://github.com/ohananoshi/LCD_16x2_API/Image/char_size.png](Image/char_size.png "LCD API WORKING IN PROTEUS SIMULATION.")
 
 ### Functions
 - send_nibble
@@ -46,6 +63,7 @@
     void lcd_print(const char* string, ...)
     ```
     ##### Print formated string like _printf_ does.
+
 - lcd_create_char
 
     ```C
@@ -57,6 +75,13 @@
     memory_postition: 0 to 7 memory position 
     dot_pattern:       Use SET_CHAR_5x10 or SET_CHAR_5x8
     ```
+
+- lcd_print_cg
+  ```C
+  void lcd_print_cg(uint8_t memory_position)
+  ```
+  ##### Print a personalized character once created. Memory position refers to array index of CGRAM.
+
 - lcd_init
 
     ```C
@@ -67,3 +92,38 @@
     lines:     Use SET_1LINE_MODE or SET_2LINE_MODE
     char_size: Use SET_CHAR_5x10 or SET_CHAR_5x8
     ```
+
+### Notes
+
+#### OBS: Interface mode constant must be defined BEFORE header include.
+
+```C
+#define LCD_4BIT_INTERFACE
+#include "lcd_api.h."
+```
+
+#### If the xc8 compiller is installed in custom folder, you must to initialize COMPILER_PATH constant
+
+```C
+#define COMPILER_PATH "absolute_path/xc.h"
+```
+
+### Example
+
+```C
+#define LCD_4BIT_INTERFACE
+#include "lcd_api.h."
+
+int main(){
+
+    lcd_init(2,SET_CHAR_5x8);
+
+    while(1){
+        lcd_print("hello");
+        DELAY_MS(500);
+        lcd_clear();
+    }
+
+    return 0;
+}
+```
