@@ -8,7 +8,7 @@
 
     Created in: 18 jul 2023
 
-    Last updated: 29 oct 2023
+    Last updated: 30 oct 2023
 */
 
 //===================================== HEADERS ========================================
@@ -47,6 +47,9 @@
         #else
             #include "xc.h"
         #endif
+#endif
+
+#ifdef _XC_H_
     #define _XTAL_FREQ 4000000
     #define DELAY_US(x) __delay_us(x)
     #define DELAY_MS(x) __delay_ms(x)
@@ -270,9 +273,9 @@ void lcd_print(const char* string, ...){
 }
 
 void lcd_print_cg(uint8_t memory_position){
-    if(memory_position > 7){
+    #if(memory_position > 7)
         #warning "MEMORY POSITION VALUE EXCEEDS CGRAM CAPACITY"
-    }
+    #endif
     send_byte(memory_position, 0);
 }
 

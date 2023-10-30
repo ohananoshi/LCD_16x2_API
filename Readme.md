@@ -26,6 +26,7 @@
   - Character size
     - SET_CHAR_5x10
     - SET_CHAR_5x8
+    - 
 ![char_size](Image/char_size.png "LCD API WORKING IN PROTEUS SIMULATION.")
 
 ### Functions
@@ -111,19 +112,37 @@
 ### Example
 
 ```C
+// PIC18F4550 - XC8 COMPILER
+#pragma config FOSC = XT_XT        // Oscillator Selection bits (XT oscillator (XT))
+
+#include <xc.h>
+
 #define LCD_4BIT_INTERFACE
-#include "lcd_api.h."
+#define LCD_RS PORTDbits.RD2
+#define LCD_EN PORTDbits.RD3
+#define LCD_D7 PORTDbits.RD7
+#define LCD_D6 PORTDbits.RD6
+#define LCD_D5 PORTDbits.RD5
+#define LCD_D4 PORTDbits.RD4
 
-int main(){
+#include "lcd_api.h"
 
-    lcd_init(2,SET_CHAR_5x8);
-
+void main(void) {
+    
+    OSCCON = 0b01100000;
+    PORTD = 0;
+    TRISD = 0x00;
+    
+    lcd_init(SET_2LINE_MODE);
+    
     while(1){
-        lcd_print("hello");
-        DELAY_MS(500);
-        lcd_clear();
+        lcd_cursor_move(0,0);
+        lcd_print("   welcome to   ");
+        lcd_cursor_move(1,0);
+        lcd_print("    LCD API    ");
     }
-
-    return 0;
+    
+    return;
 }
 ```
+![example_1](Image/example_1.png "LCD API WORKING IN PROTEUS SIMULATION.")
