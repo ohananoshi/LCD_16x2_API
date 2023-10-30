@@ -96,10 +96,16 @@
 
 ### Notes
 
-#### OBS: Interface mode constant must be defined BEFORE header include.
+#### OBS: Interface mode constant and pinout must be defined BEFORE header include.
 
 ```C
 #define LCD_4BIT_INTERFACE
+#define LCD_RS PORTDbits.RD2
+#define LCD_EN PORTDbits.RD3
+#define LCD_D7 PORTDbits.RD7
+#define LCD_D6 PORTDbits.RD6
+#define LCD_D5 PORTDbits.RD5
+#define LCD_D4 PORTDbits.RD4
 #include "lcd_api.h."
 ```
 
